@@ -11,6 +11,7 @@ npm install
 npm run dev
 ```
 
+
 ## Building
 
 ```bash
@@ -39,6 +40,7 @@ This repository uses a custom `theirs` merge driver to automatically resolve con
 
 ```bash
 git config merge.theirs.driver "./scripts/theirs-driver.sh %O %A %B"
+
 ```
 
 
