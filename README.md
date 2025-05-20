@@ -11,10 +11,6 @@ npm install
 npm run dev
 ```
 
-The `.codex/setup.sh` script is executed when the Codex environment is
-initialized and installs these dependencies automatically. This allows the
-project to build even after network access is disabled.
-
 
 ## Building
 
@@ -40,10 +36,11 @@ npm start
 
 ## Merge conflict resolution
 
-This repository uses a custom `ours` merge driver to automatically resolve conflicts in favor of the feature branch. The `.gitattributes` file configures this driver for all files. The Git configuration contains:
+This repository uses a custom `theirs` merge driver to automatically resolve conflicts in favor of the merging branch. The `.gitattributes` file configures this driver for all files. Configure the driver with:
 
 ```bash
-git config merge.ours.driver true
+git config merge.theirs.driver "./scripts/theirs-driver.sh %O %A %B"
+
 ```
 
 
