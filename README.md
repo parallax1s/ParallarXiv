@@ -11,6 +11,11 @@ npm install
 npm run dev
 ```
 
+The `.codex/setup.sh` script is executed when the Codex environment is
+initialized and installs these dependencies automatically. This allows the
+project to build even after network access is disabled.
+
+
 ## Building
 
 ```bash
