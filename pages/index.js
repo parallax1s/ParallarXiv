@@ -9,6 +9,7 @@ export default function Home() {
       <main>
         <h1>ParallarXiv</h1>
         <p>Deployment successful!</p>
+        <p>Visit <code>/api/papers</code> for generated paper data.</p>
       </main>
     </>
   )
