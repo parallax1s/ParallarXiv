@@ -5,4 +5,5 @@ export default function handler(req, res) {
   const num = parseInt(count, 10) || 5000;
   const data = generatePapers(num);
   res.status(200).json(data);
+
 }

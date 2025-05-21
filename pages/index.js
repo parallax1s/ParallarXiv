@@ -13,6 +13,7 @@ export default function Home() {
           Visit <code>/api/papers</code> for generated paper data including a
           topic hierarchy with subcategories.
         </p>
+
       </main>
     </>
   )
