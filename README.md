@@ -19,6 +19,11 @@ npm run build
 npm start
 ```
 
+## Generated Paper API
+
+An API route at `/api/papers` returns synthetic paper data. Each response
+includes a `papers` array and a `topics` hierarchy describing subcategories.
+
 ## Vercel configuration
 
 1. **Project Settings**
