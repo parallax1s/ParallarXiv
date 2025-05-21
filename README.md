@@ -34,6 +34,13 @@ npm start
    - Push to the `main` or a feature branch. Vercel automatically builds and deploys.
    - Visit the deployed URL to verify you see the placeholder message.
 
+## API
+
+`/api/papers` returns a JSON object with two fields:
+
+- `papers` – the generated list of artificial papers
+- `topicHierarchy` – the topics and subcategories used when generating papers
+
 ## Merge conflict resolution
 
 This repository uses a custom `theirs` merge driver to automatically resolve conflicts in favor of the merging branch. The `.gitattributes` file configures this driver for all files. Configure the driver with:
