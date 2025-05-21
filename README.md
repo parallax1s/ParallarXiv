@@ -48,4 +48,6 @@ git config merge.theirs.driver "./scripts/theirs-driver.sh %O %A %B"
 
 ```
 
+This line is added to test merge conflict behavior.
+
 

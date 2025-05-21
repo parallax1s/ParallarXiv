@@ -1,4 +1,5 @@
 import Head from 'next/head'
+// Page updated to induce merge conflicts
 
 export default function Home() {
   return (

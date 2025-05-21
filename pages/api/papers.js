@@ -1,4 +1,5 @@
 import { generatePapers } from '../../lib/generatePapers';
+// API handler modified for merge conflict checks
 
 export default function handler(req, res) {
   const { count } = req.query;
