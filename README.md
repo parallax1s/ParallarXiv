@@ -4,4 +4,4 @@ This repo hosts a simple demo site. Paper data is generated at deploy time using
 
 ## Generating data
 
-Run `python generate_papers.py` to create `papers.json` with 5,000 artificial papers across multiple science topics.
+Run `python3 generate_papers.py` or `npm run generate` to create `papers.json` with 5,000 artificial papers across multiple science topics.
