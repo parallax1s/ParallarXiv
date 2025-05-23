@@ -1,0 +1,4 @@
+{
+  "buildCommand": "python generate_papers.py",
+  "outputDirectory": "."
+}
