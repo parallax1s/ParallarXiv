@@ -95,7 +95,8 @@ def generate_papers(num_papers=5000):
 
 def main():
     data = generate_papers()
-    out = Path(__file__).with_name("papers.json")
+    out = Path(__file__).resolve().parent / "public" / "papers.json"
+    out.parent.mkdir(exist_ok=True)
     out.write_text(json.dumps(data))
     print(f"Generated {len(data['papers'])} papers to {out}")
 
