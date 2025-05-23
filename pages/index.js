@@ -62,7 +62,7 @@ export default function Home() {
 
       window.addEventListener('scroll', () => {
         const depth = window.scrollY;
-        container.style('transform', `translateZ(${-depth}px)`);
+        container.style('transform', `translate(-50%, -50%) translateZ(${-depth}px)`);
       });
     }
 
@@ -77,7 +77,7 @@ export default function Home() {
       <Head>
         <title>ParallarXiv</title>
         <style>{`body { margin: 0; overflow-y: scroll; perspective: 1000px; height: 200vh; background: #000; color: #fff; }
-        #viz { position: fixed; width: 100%; height: 100%; top: 0; left: 0; transform-style: preserve-3d; }
+        #viz { position: fixed; width: 100%; height: 100%; top: 50%; left: 50%; transform-style: preserve-3d; transform: translate(-50%, -50%); }
         .node { position: absolute; transform-style: preserve-3d; white-space: nowrap; font-size: 12px; }`}</style>
       </Head>
       <h1>Deployment OK</h1>
