@@ -1,4 +1,3 @@
 {
-  "buildCommand": "python3 generate_papers.py",
-  "outputDirectory": "."
+  "buildCommand": "python3 generate_papers.py"
 }
