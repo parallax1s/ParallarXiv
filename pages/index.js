@@ -130,7 +130,9 @@ export default function Home() {
       <Head>
         <title>ParallarXiv</title>
         <style>{`body { margin: 0; overflow: hidden; height: 100vh; background: #fff; color: #000; }
-        #viz { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; }`}</style>
+        #viz { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; }
+        h1 { position: absolute; top: 10px; left: 10px; z-index: 10; }`}</style>
+
       </Head>
       <h1>Deployment OK</h1>
       <div id="viz"></div>
