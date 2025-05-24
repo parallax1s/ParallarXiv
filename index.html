@@ -13,18 +13,15 @@
       }
       #viz {
         position: fixed;
-        width: 100%;
-        height: 100%;
         top: 50%;
         left: 50%;
+        width: 600px;
+        height: 600px;
         transform-style: preserve-3d;
-        transform: translate(-50%, -50%);
+        transform: translate(-50%, -50%) rotateX(45deg);
       }
-      .node {
-        position: absolute;
-        transform-style: preserve-3d;
-        white-space: nowrap;
-        font-size: 12px;
+      path.slice {
+        transform-origin: 50% 50%;
       }
     </style>
   </head>
@@ -34,67 +31,80 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <script>
       function buildHierarchy(data) {
-        const hierarchy = {};
+        const root = { name: 'root', children: [] };
+        const lookup = {};
         for (const [topic, details] of Object.entries(data.topics)) {
-          hierarchy[topic] = {};
+          const topicNode = { name: topic, children: [] };
+          lookup[topic] = { node: topicNode, cat: {} };
+          root.children.push(topicNode);
           for (const [cat, subs] of Object.entries(details.categories)) {
-            hierarchy[topic][cat] = {};
+            const catNode = { name: cat, children: [] };
+            lookup[topic].cat[cat] = { node: catNode, sub: {} };
+            topicNode.children.push(catNode);
             subs.forEach(sub => {
-              hierarchy[topic][cat][sub] = [];
+              const subNode = { name: sub, children: [] };
+              lookup[topic].cat[cat].sub[sub] = subNode;
+              catNode.children.push(subNode);
             });
           }
         }
         data.papers.forEach(p => {
-          const arr = hierarchy[p.topic][p.category][p.subcategory];
-          if (arr.length < 5) arr.push(p.title);
+          const subNode = lookup[p.topic].cat[p.category].sub[p.subcategory];
+          if (subNode.children.length < 5) subNode.children.push({ name: p.title });
         });
-        return hierarchy;
+        return root;
       }
 
-      function render(hierarchy) {
+      function renderSunburst(rootData) {
+        const width = 600;
+        const radius = width / 2;
         const container = d3.select('#viz');
-        const levels = [];
-        let levelDepth = 0;
-        const topicKeys = Object.keys(hierarchy);
-        const topicStep = (2 * Math.PI) / topicKeys.length;
-        topicKeys.forEach((topic, i) => {
-          levels.push({ name: topic, angle: i * topicStep, radius: 150, depth: 0 });
-          const cats = Object.keys(hierarchy[topic]);
-          const catStep = (2 * Math.PI) / cats.length;
-          cats.forEach((cat, j) => {
-            levels.push({ name: cat, angle: j * catStep, radius: 250, depth: 1 });
-            const subs = Object.keys(hierarchy[topic][cat]);
-            const subStep = (2 * Math.PI) / subs.length;
-            subs.forEach((sub, k) => {
-              levels.push({ name: sub, angle: k * subStep, radius: 350, depth: 2 });
-              const papers = hierarchy[topic][cat][sub];
-              const paperStep = (2 * Math.PI) / papers.length;
-              papers.forEach((paper, p) => {
-                levels.push({ name: paper, angle: p * paperStep, radius: 450, depth: 3 });
-              });
-            });
-          });
-          levelDepth = 3;
-        });
-        container.selectAll('div')
-          .data(levels)
+        container.selectAll('*').remove();
+
+        const svg = container
+          .append('svg')
+          .attr('viewBox', [-radius, -radius, width, width].join(' '))
+          .style('width', width + 'px')
+          .style('height', width + 'px')
+          .style('transform-style', 'preserve-3d');
+
+        const root = d3.hierarchy(rootData).sum(d => (d.children ? 0 : 1));
+        d3.partition().size([2 * Math.PI, radius])(root);
+
+        const color = d3.scaleOrdinal(
+          d3.quantize(d3.interpolateRainbow, root.children.length + 1)
+        );
+
+        const arc = d3
+          .arc()
+          .startAngle(d => d.x0)
+          .endAngle(d => d.x1)
+          .innerRadius(d => d.y0)
+          .outerRadius(d => d.y1);
+
+        svg
+          .selectAll('path')
+          .data(root.descendants().filter(d => d.depth))
           .enter()
-          .append('div')
-          .attr('class', 'node')
-          .style('transform', d =>
-            `translate(-50%, -50%) rotate(${d.angle}rad) translate(${d.radius}px) rotate(${-d.angle}rad) translateZ(${d.depth * 200}px)`
-          )
-          .text(d => d.name);
+          .append('path')
+          .attr('d', arc)
+          .attr('class', 'slice')
+          .style('fill', d => color((d.children ? d : d.parent).data.name))
+          .style('stroke', '#000')
+          .style('transform', d => `translateZ(${d.depth * 100}px)`);
 
         window.addEventListener('scroll', () => {
           const depth = window.scrollY;
-          container.style('transform', `translate(-50%, -50%) translateZ(${-depth}px)`);
+          container.style(
+            'transform',
+            `translate(-50%, -50%) rotateX(45deg) translateZ(${-depth}px)`
+          );
         });
       }
 
       fetch('papers.json')
         .then(r => r.json())
-        .then(data => render(buildHierarchy(data)))
+        .then(data => renderSunburst(buildHierarchy(data)))
         .catch(err => console.error(err));
     </script>
   </body>
