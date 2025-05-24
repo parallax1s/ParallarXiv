@@ -5,32 +5,36 @@
     <style>
       body {
         margin: 0;
-        overflow-y: scroll;
+        overflow: hidden;
         height: 100vh;
         background: #fff;
         color: #000;
       }
       #viz {
         position: fixed;
-        top: 50%;
-        left: 50%;
-        width: 600px;
-        height: 600px;
-        transform: translate(-50%, -50%);
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
       }
-      path.slice {
-        transform-origin: 50% 50%;
-      }
-    </style>
+        h1 {
+          position: absolute;
+          top: 10px;
+          left: 10px;
+          z-index: 10;
+        }
+      </style>
   </head>
   <body>
     <h1>Deployment OK</h1>
     <div id="viz"></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/three-spritetext@2.0.2/build/THREE.SpriteText.min.js"></script>
     <script>
       function buildHierarchy(data) {
         const root = { name: 'root', children: [] };
-        const lookup = {};
+        const lookup = { paper: {} };
         for (const [topic, details] of Object.entries(data.topics)) {
           const topicNode = { name: topic, children: [] };
           lookup[topic] = { node: topicNode, cat: {} };
@@ -48,63 +52,99 @@
         }
         data.papers.forEach(p => {
           const subNode = lookup[p.topic].cat[p.category].sub[p.subcategory];
-          if (subNode.children.length < 5) subNode.children.push({ name: p.title });
+          const paperNode = {
+            name: p.title,
+            id: p.id,
+            citation_count: p.citation_count,
+            citations: p.citations
+          };
+          lookup.paper[p.id] = paperNode;
+          if (subNode.children.length < 5) subNode.children.push(paperNode);
         });
-        return root;
+        return { root, lookup };
       }
 
-      function renderSunburst(rootData) {
-        const width = 600;
-        const radius = width / 2;
-        const container = d3.select('#viz');
-        container.selectAll('*').remove();
+      function render3D(info) {
+        const rootData = info.root;
+        const paperLookup = info.lookup.paper;
+        const container = document.getElementById('viz');
+        container.innerHTML = '';
+        const width = container.clientWidth;
+        const height = container.clientHeight;
 
-        const svg = container
-          .append('svg')
-          .attr('viewBox', [-radius, -radius, width, width].join(' '))
-          .style('width', width + 'px')
-          .style('height', width + 'px');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 2000);
+        camera.position.z = 200;
 
-        const root = d3.hierarchy(rootData).sum(d => (d.children ? 0 : 1));
-        d3.partition().size([2 * Math.PI, radius])(root);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(width, height);
+        container.appendChild(renderer.domElement);
 
-        const color = d3.scaleOrdinal(
-          d3.quantize(d3.interpolateRainbow, root.children.length + 1)
-        );
+        const root = d3.hierarchy(rootData).sum(d => (d.children ? d.children.length : 1));
+        d3.partition().size([2 * Math.PI, 40])(root);
 
-        const arc = d3
-          .arc()
-          .startAngle(d => d.x0)
-          .endAngle(d => d.x1)
-          .innerRadius(d => d.y0)
-          .outerRadius(d => d.y1);
+        const nodeMeshes = {};
+        const color = d3.scaleOrdinal(d3.schemeCategory10);
 
-        svg
-          .selectAll('path')
-          .data(root.descendants().filter(d => d.depth))
-          .enter()
-          .append('path')
-          .attr('d', arc)
-          .attr('class', 'slice')
-          .style('fill', d => color((d.children ? d : d.parent).data.name))
-          .style('stroke', '#000');
+        root.descendants().forEach(d => {
+          const angle = (d.x0 + d.x1) / 2;
+          const r = (d.y0 + d.y1) / 2;
+          const depth = d.depth;
+          const x = 60 * r * Math.cos(angle);
+          const y = 60 * r * Math.sin(angle);
+          const z = -depth * 30;
+          const sizeVal = d.children ? d.children.length : (d.data.citation_count || 1);
+          const radius = Math.cbrt(sizeVal) + 1;
+          const geometry = new THREE.SphereGeometry(radius, 8, 8);
+          const material = new THREE.MeshBasicMaterial({ color: color(depth) });
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.position.set(x, y, z);
+          const label = new SpriteText(d.data.name);
+          label.color = '#000';
+          label.textHeight = radius * 1.5;
+          mesh.add(label);
+          scene.add(mesh);
+          if (d.data.id) nodeMeshes[d.data.id] = mesh;
+        });
 
-        svg
-          .selectAll('text')
-          .data(root.descendants().filter(d => d.depth))
-          .enter()
-          .append('text')
-          .attr('transform', d => `translate(${arc.centroid(d)})`)
-          .attr('dy', '0.35em')
-          .style('font-size', '10px')
-          .style('text-anchor', 'middle')
-          .text(d => d.data.name);
+        Object.values(paperLookup).forEach(p => {
+          const from = nodeMeshes[p.id];
+          if (!from) return;
+          p.citations.slice(0, 3).forEach(cid => {
+            const to = nodeMeshes[cid];
+            if (!to) return;
+            const points = [from.position.clone(), to.position.clone()];
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            const material = new THREE.LineDashedMaterial({ color: 0x888888, dashSize: 1, gapSize: 1 });
+            const line = new THREE.Line(geometry, material);
+            line.computeLineDistances();
+            scene.add(line);
+          });
+        });
 
+        function animate() {
+          requestAnimationFrame(animate);
+          renderer.render(scene, camera);
+        }
+
+        function onKey(e) {
+          const step = 5;
+          if (e.key === 'ArrowLeft') camera.position.x -= step;
+          if (e.key === 'ArrowRight') camera.position.x += step;
+          if (e.key === 'ArrowUp') camera.position.y += step;
+          if (e.key === 'ArrowDown') camera.position.y -= step;
+        }
+        document.addEventListener('keydown', onKey);
+        container.addEventListener('wheel', e => {
+          camera.position.z += e.deltaY * 0.2;
+        });
+
+        animate();
       }
 
       fetch('papers.json')
         .then(r => r.json())
-        .then(data => renderSunburst(buildHierarchy(data)))
+        .then(data => render3D(buildHierarchy(data)))
         .catch(err => console.error(err));
     </script>
   </body>
