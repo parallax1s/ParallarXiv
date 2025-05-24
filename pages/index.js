@@ -42,8 +42,7 @@ export default function Home() {
         .append('svg')
         .attr('viewBox', [-radius, -radius, width, width].join(' '))
         .style('width', width + 'px')
-        .style('height', width + 'px')
-        .style('transform-style', 'preserve-3d');
+        .style('height', width + 'px');
 
       const root = d3.hierarchy(rootData).sum(d => (d.children ? 0 : 1));
       d3.partition().size([2 * Math.PI, radius])(root);
@@ -67,16 +66,18 @@ export default function Home() {
         .attr('d', arc)
         .attr('class', 'slice')
         .style('fill', d => color((d.children ? d : d.parent).data.name))
-        .style('stroke', '#000')
-        .style('transform', d => `translateZ(${d.depth * 100}px)`);
+        .style('stroke', '#000');
 
-      window.addEventListener('scroll', () => {
-        const depth = window.scrollY;
-        container.style(
-          'transform',
-          `translate(-50%, -50%) rotateX(45deg) translateZ(${-depth}px)`
-        );
-      });
+      svg
+        .selectAll('text')
+        .data(root.descendants().filter(d => d.depth))
+        .enter()
+        .append('text')
+        .attr('transform', d => `translate(${arc.centroid(d)})`)
+        .attr('dy', '0.35em')
+        .style('font-size', '10px')
+        .style('text-anchor', 'middle')
+        .text(d => d.data.name);
     }
 
     fetch('/papers.json')
@@ -89,8 +90,8 @@ export default function Home() {
       <>
         <Head>
           <title>ParallarXiv</title>
-          <style>{`body { margin: 0; overflow-y: scroll; perspective: 1000px; height: 200vh; background: #000; color: #fff; }
-        #viz { position: fixed; top: 50%; left: 50%; width: 600px; height: 600px; transform-style: preserve-3d; transform: translate(-50%, -50%) rotateX(45deg); }
+          <style>{`body { margin: 0; overflow-y: scroll; height: 100vh; background: #fff; color: #000; }
+        #viz { position: fixed; top: 50%; left: 50%; width: 600px; height: 600px; transform: translate(-50%, -50%); }
         path.slice { transform-origin: 50% 50%; }`}</style>
         </Head>
       <h1>Deployment OK</h1>
