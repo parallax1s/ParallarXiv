@@ -7,8 +7,6 @@ export default function Home() {
       <Head>
         <title>ParallarXiv</title>
       </Head>
-      <Script src="https://unpkg.com/three@0.160.1/build/three.min.js" strategy="beforeInteractive" />
-      <Script src="https://unpkg.com/three@0.160.1/examples/js/controls/PointerLockControls.js" strategy="beforeInteractive" />
       <style jsx global>{`
         body {
           margin: 0;
@@ -35,89 +33,46 @@ export default function Home() {
       {/* Scene setup */}
       <Script id="main-script" strategy="lazyOnload">
         {`
-          const scene = new THREE.Scene();
-          scene.background = new THREE.Color(0x000000);
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          document.body.appendChild(canvas);
 
-          const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-          camera.position.y = 1.6;
+          function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+          }
+          window.addEventListener('resize', resize);
+          resize();
 
-          const renderer = new THREE.WebGLRenderer();
-          renderer.setSize(window.innerWidth, window.innerHeight);
-          document.body.appendChild(renderer.domElement);
-
-          const controls = new THREE.PointerLockControls(camera, renderer.domElement);
           const overlay = document.getElementById('overlay');
-
           overlay.addEventListener('click', () => {
-            controls.lock();
+            canvas.requestPointerLock();
           });
 
-          controls.addEventListener('lock', () => {
-            overlay.style.display = 'none';
+          document.addEventListener('pointerlockchange', () => {
+            if (document.pointerLockElement === canvas) {
+              overlay.style.display = 'none';
+            } else {
+              overlay.style.display = 'flex';
+            }
           });
-          controls.addEventListener('unlock', () => {
-            overlay.style.display = 'flex';
-          });
 
-          const objects = [];
-          const velocities = new Map();
-
-          const raycaster = new THREE.Raycaster();
-          const mouse = new THREE.Vector2();
-
+          const balls = [];
           function spawnBall() {
-            const geometry = new THREE.SphereGeometry(Math.random() * 0.5 + 0.2, 32, 32);
-            const material = new THREE.MeshStandardMaterial({
-              color: new THREE.Color(Math.random(), Math.random(), Math.random()),
-            });
-            const sphere = new THREE.Mesh(geometry, material);
-            sphere.position.set((Math.random() - 0.5) * 20, Math.random() * 4 + 1, (Math.random() - 0.5) * 20);
-            scene.add(sphere);
-            objects.push(sphere);
-            velocities.set(sphere, new THREE.Vector3((Math.random() - 0.5) * 0.02, (Math.random() - 0.5) * 0.02, (Math.random() - 0.5) * 0.02));
-
-            // schedule next spawn
+            const radius = Math.random() * 20 + 10;
+            const color = `hsl(${Math.random() * 360}, 70%, 50%)`;
+            const ball = {
+              x: (Math.random() - 0.5) * 400,
+              y: (Math.random() - 0.5) * 300,
+              r: radius,
+              color,
+              vx: (Math.random() - 0.5) * 0.4,
+              vy: (Math.random() - 0.5) * 0.4,
+            };
+            balls.push(ball);
             setTimeout(spawnBall, Math.random() * 2000 + 1000);
           }
-
-          // start spawning
           spawnBall();
-
-          const ambient = new THREE.AmbientLight(0xffffff, 0.5);
-          scene.add(ambient);
-          const directional = new THREE.DirectionalLight(0xffffff, 0.5);
-          directional.position.set(1, 1, 1);
-          scene.add(directional);
-
-          const clock = new THREE.Clock();
-
-          function animate() {
-            requestAnimationFrame(animate);
-
-            const delta = clock.getDelta();
-
-            objects.forEach((obj) => {
-              const v = velocities.get(obj);
-              obj.position.addScaledVector(v, delta * 60);
-              if (obj.position.length() > 30) {
-                obj.position.multiplyScalar(0.8);
-              }
-            });
-
-            if (controls.isLocked === true) {
-              const moveSpeed = 5 * delta;
-              const direction = new THREE.Vector3();
-              if (keys['w']) direction.z -= moveSpeed;
-              if (keys['s']) direction.z += moveSpeed;
-              if (keys['a']) direction.x -= moveSpeed;
-              if (keys['d']) direction.x += moveSpeed;
-              controls.moveRight(direction.x);
-              controls.moveForward(direction.z);
-            }
-
-            renderer.render(scene, camera);
-          }
-          animate();
 
           const keys = {};
           window.addEventListener('keydown', (e) => {
@@ -127,26 +82,66 @@ export default function Home() {
             keys[e.key.toLowerCase()] = false;
           });
 
-          function onClick() {
-            if (!controls.isLocked) return;
-            mouse.x = 0;
-            mouse.y = 0;
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(objects);
-            if (intersects.length > 0) {
-              const hit = intersects[0].object;
-              scene.remove(hit);
-              velocities.delete(hit);
-              const index = objects.indexOf(hit);
-              if (index > -1) objects.splice(index, 1);
-            }
-          }
-          document.addEventListener('click', onClick);
+          const player = { x: 0, y: 0 };
 
-          window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+          function update(delta) {
+            const speed = 100 * delta;
+            if (keys['w']) player.y -= speed;
+            if (keys['s']) player.y += speed;
+            if (keys['a']) player.x -= speed;
+            if (keys['d']) player.x += speed;
+            balls.forEach((b) => {
+              b.x += b.vx * delta * 60;
+              b.y += b.vy * delta * 60;
+              if (Math.hypot(b.x, b.y) > 600) {
+                b.x *= 0.8;
+                b.y *= 0.8;
+              }
+            });
+          }
+
+          function draw() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.save();
+            ctx.translate(canvas.width / 2 - player.x, canvas.height / 2 - player.y);
+            balls.forEach((b) => {
+              ctx.fillStyle = b.color;
+              ctx.beginPath();
+              ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+              ctx.fill();
+            });
+            ctx.restore();
+
+            ctx.strokeStyle = '#fff';
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2 - 10, canvas.height / 2);
+            ctx.lineTo(canvas.width / 2 + 10, canvas.height / 2);
+            ctx.moveTo(canvas.width / 2, canvas.height / 2 - 10);
+            ctx.lineTo(canvas.width / 2, canvas.height / 2 + 10);
+            ctx.stroke();
+          }
+
+          let last = performance.now();
+          function animate(time) {
+            const delta = (time - last) / 1000;
+            last = time;
+            update(delta);
+            draw();
+            requestAnimationFrame(animate);
+          }
+          requestAnimationFrame(animate);
+
+          canvas.addEventListener('click', () => {
+            if (document.pointerLockElement !== canvas) return;
+            for (let i = 0; i < balls.length; i++) {
+              const b = balls[i];
+              if (Math.hypot(b.x - player.x, b.y - player.y) <= b.r) {
+                balls.splice(i, 1);
+                break;
+              }
+            }
           });
         `}
       </Script>
