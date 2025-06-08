@@ -9,27 +9,13 @@ export default function Home() {
       </Head>
       <Script src="https://unpkg.com/three@0.160.1/build/three.min.js" strategy="beforeInteractive" />
       <Script src="https://unpkg.com/three@0.160.1/examples/js/controls/PointerLockControls.js" strategy="beforeInteractive" />
-      <div id="overlay">Click to start</div>
       <style jsx global>{`
         body {
           margin: 0;
           overflow: hidden;
           font-family: sans-serif;
         }
-        #overlay {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          background: rgba(0, 0, 0, 0.6);
-          color: #fff;
-          cursor: pointer;
-          z-index: 1;
-        }
+        /* overlay removed */
       `}</style>
       {/* Scene setup */}
       <Script id="main-script" strategy="lazyOnload">
@@ -46,16 +32,8 @@ export default function Home() {
 
           const controls = new THREE.PointerLockControls(camera, renderer.domElement);
 
-          const overlay = document.getElementById('overlay');
-          overlay.addEventListener('click', () => {
-            controls.lock();
-          });
-          controls.addEventListener('lock', () => {
-            overlay.style.display = 'none';
-          });
-          controls.addEventListener('unlock', () => {
-            overlay.style.display = 'flex';
-          });
+          // automatically lock pointer on page load
+          controls.lock();
 
           const objects = [];
           const velocities = new Map();
