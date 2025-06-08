@@ -1,9 +1,0 @@
-{
-  "name": "parallarxiv",
-  "version": "1.0.0",
-  "private": true,
-  "scripts": {
-    "generate": "python3 generate_papers.py",
-    "build": "npm run generate && next build"
-  }
-}
