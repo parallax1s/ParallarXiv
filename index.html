@@ -7,13 +7,28 @@
         margin: 0;
         overflow: hidden;
         font-family: sans-serif;
+        background: #000;
       }
-      /* overlay removed */
+      #overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: #fff;
+        background: rgba(0, 0, 0, 0.5);
+        cursor: pointer;
+      }
     </style>
     <script src="https://unpkg.com/three@0.160.1/build/three.min.js"></script>
     <script src="https://unpkg.com/three@0.160.1/examples/js/controls/PointerLockControls.js"></script>
   </head>
   <body>
+    <div id="overlay">Click to start</div>
     <script>
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(0x000000);
@@ -31,9 +46,18 @@
       document.body.appendChild(renderer.domElement);
 
       const controls = new THREE.PointerLockControls(camera, renderer.domElement);
+      const overlay = document.getElementById('overlay');
 
-      // automatically lock pointer on page load
-      controls.lock();
+      overlay.addEventListener('click', () => {
+        controls.lock();
+      });
+
+      controls.addEventListener('lock', () => {
+        overlay.style.display = 'none';
+      });
+      controls.addEventListener('unlock', () => {
+        overlay.style.display = 'flex';
+      });
 
       const objects = []; // store balls
       const velocities = new Map();
@@ -59,10 +83,13 @@
           (Math.random() - 0.5) * 0.02,
           (Math.random() - 0.5) * 0.02
         ));
+
+        // schedule next spawn
+        setTimeout(spawnBall, Math.random() * 2000 + 1000);
       }
 
-      // spawn balls periodically
-      setInterval(spawnBall, 2000);
+      // start spawning
+      spawnBall();
 
       // lighting
       const ambient = new THREE.AmbientLight(0xffffff, 0.5);
