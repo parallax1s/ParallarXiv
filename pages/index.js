@@ -14,9 +14,24 @@ export default function Home() {
           margin: 0;
           overflow: hidden;
           font-family: sans-serif;
+          background: #000;
         }
-        /* overlay removed */
+        #overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 24px;
+          color: #fff;
+          background: rgba(0, 0, 0, 0.5);
+          cursor: pointer;
+        }
       `}</style>
+      <div id="overlay">Click to start</div>
       {/* Scene setup */}
       <Script id="main-script" strategy="lazyOnload">
         {`
@@ -31,9 +46,18 @@ export default function Home() {
           document.body.appendChild(renderer.domElement);
 
           const controls = new THREE.PointerLockControls(camera, renderer.domElement);
+          const overlay = document.getElementById('overlay');
 
-          // automatically lock pointer on page load
-          controls.lock();
+          overlay.addEventListener('click', () => {
+            controls.lock();
+          });
+
+          controls.addEventListener('lock', () => {
+            overlay.style.display = 'none';
+          });
+          controls.addEventListener('unlock', () => {
+            overlay.style.display = 'flex';
+          });
 
           const objects = [];
           const velocities = new Map();
@@ -51,9 +75,13 @@ export default function Home() {
             scene.add(sphere);
             objects.push(sphere);
             velocities.set(sphere, new THREE.Vector3((Math.random() - 0.5) * 0.02, (Math.random() - 0.5) * 0.02, (Math.random() - 0.5) * 0.02));
+
+            // schedule next spawn
+            setTimeout(spawnBall, Math.random() * 2000 + 1000);
           }
 
-          setInterval(spawnBall, 2000);
+          // start spawning
+          spawnBall();
 
           const ambient = new THREE.AmbientLight(0xffffff, 0.5);
           scene.add(ambient);
