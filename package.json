@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
+    "build": "node build.js",
+    "start": "next start",
+    "test": "node test/index.test.js"
   },
   "dependencies": {
     "next": "15.3.2",
