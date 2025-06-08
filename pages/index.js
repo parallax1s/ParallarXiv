@@ -60,7 +60,7 @@ export default function Home() {
           const balls = [];
           function spawnBall() {
             const radius = Math.random() * 20 + 10;
-            const color = `hsl(${Math.random() * 360}, 70%, 50%)`;
+            const color = 'hsl(' + (Math.random() * 360) + ', 70%, 50%)';
             const ball = {
               x: (Math.random() - 0.5) * 400,
               y: (Math.random() - 0.5) * 300,
