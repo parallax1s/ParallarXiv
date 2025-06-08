@@ -1,13 +1,14 @@
 import Head from 'next/head';
+import Script from 'next/script';
 
 export default function Home() {
   return (
     <>
       <Head>
         <title>ParallarXiv</title>
-        <script src="https://unpkg.com/three@0.160.1/build/three.min.js"></script>
-        <script src="https://unpkg.com/three@0.160.1/examples/js/controls/PointerLockControls.js"></script>
       </Head>
+      <Script src="https://unpkg.com/three@0.160.1/build/three.min.js" strategy="beforeInteractive" />
+      <Script src="https://unpkg.com/three@0.160.1/examples/js/controls/PointerLockControls.js" strategy="beforeInteractive" />
       <div id="overlay">Click to start</div>
       <style jsx global>{`
         body {
@@ -30,18 +31,13 @@ export default function Home() {
           z-index: 1;
         }
       `}</style>
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
+      {/* Scene setup */}
+      <Script id="main-script" strategy="lazyOnload">
+        {`
           const scene = new THREE.Scene();
           scene.background = new THREE.Color(0x000000);
 
-          const camera = new THREE.PerspectiveCamera(
-            75,
-            window.innerWidth / window.innerHeight,
-            0.1,
-            1000
-          );
+          const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
           camera.position.y = 1.6;
 
           const renderer = new THREE.WebGLRenderer();
@@ -73,18 +69,10 @@ export default function Home() {
               color: new THREE.Color(Math.random(), Math.random(), Math.random()),
             });
             const sphere = new THREE.Mesh(geometry, material);
-            sphere.position.set(
-              (Math.random() - 0.5) * 20,
-              Math.random() * 4 + 1,
-              (Math.random() - 0.5) * 20
-            );
+            sphere.position.set((Math.random() - 0.5) * 20, Math.random() * 4 + 1, (Math.random() - 0.5) * 20);
             scene.add(sphere);
             objects.push(sphere);
-            velocities.set(sphere, new THREE.Vector3(
-              (Math.random() - 0.5) * 0.02,
-              (Math.random() - 0.5) * 0.02,
-              (Math.random() - 0.5) * 0.02
-            ));
+            velocities.set(sphere, new THREE.Vector3((Math.random() - 0.5) * 0.02, (Math.random() - 0.5) * 0.02, (Math.random() - 0.5) * 0.02));
           }
 
           setInterval(spawnBall, 2000);
@@ -113,10 +101,10 @@ export default function Home() {
             if (controls.isLocked === true) {
               const moveSpeed = 5 * delta;
               const direction = new THREE.Vector3();
-              if (keys["w"]) direction.z -= moveSpeed;
-              if (keys["s"]) direction.z += moveSpeed;
-              if (keys["a"]) direction.x -= moveSpeed;
-              if (keys["d"]) direction.x += moveSpeed;
+              if (keys['w']) direction.z -= moveSpeed;
+              if (keys['s']) direction.z += moveSpeed;
+              if (keys['a']) direction.x -= moveSpeed;
+              if (keys['d']) direction.x += moveSpeed;
               controls.moveRight(direction.x);
               controls.moveForward(direction.z);
             }
@@ -133,7 +121,7 @@ export default function Home() {
             keys[e.key.toLowerCase()] = false;
           });
 
-          function onClick(event) {
+          function onClick() {
             if (!controls.isLocked) return;
             mouse.x = 0;
             mouse.y = 0;
@@ -154,8 +142,8 @@ export default function Home() {
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
           });
-        `}}
-      />
+        `}
+      </Script>
     </>
   );
 }
