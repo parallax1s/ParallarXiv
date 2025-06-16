@@ -131,23 +131,27 @@
 
   function update(delta) {
     const speed = moveSpeed * delta;
-    const cos = Math.cos(camera.yaw);
-    const sin = Math.sin(camera.yaw);
+    const cosYaw = Math.cos(camera.yaw);
+    const sinYaw = Math.sin(camera.yaw);
+    const cosPitch = Math.cos(camera.pitch);
+    const sinPitch = Math.sin(camera.pitch);
     if (keys['w']) {
-      camera.x += sin * speed;
-      camera.z += cos * speed;
+      camera.x += sinYaw * cosPitch * speed;
+      camera.y += sinPitch * speed;
+      camera.z += cosYaw * cosPitch * speed;
     }
     if (keys['s']) {
-      camera.x -= sin * speed;
-      camera.z -= cos * speed;
+      camera.x -= sinYaw * cosPitch * speed;
+      camera.y -= sinPitch * speed;
+      camera.z -= cosYaw * cosPitch * speed;
     }
     if (keys['a']) {
-      camera.x -= cos * speed;
-      camera.z += sin * speed;
+      camera.x -= cosYaw * speed;
+      camera.z += sinYaw * speed;
     }
     if (keys['d']) {
-      camera.x += cos * speed;
-      camera.z -= sin * speed;
+      camera.x += cosYaw * speed;
+      camera.z -= sinYaw * speed;
     }
 
     if (keys['Shift']) {
