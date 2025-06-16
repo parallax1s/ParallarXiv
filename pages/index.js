@@ -28,14 +28,46 @@ export default function Home() {
           background: rgba(0, 0, 0, 0.5);
           cursor: pointer;
         }
+        #menu {
+          position: fixed;
+          top: 10px;
+          right: 10px;
+          background: rgba(0, 0, 0, 0.7);
+          color: #fff;
+          padding: 8px;
+          font-size: 14px;
+          border-radius: 4px;
+        }
+        #menu-content {
+          margin-top: 4px;
+        }
+        #menu.minimized #menu-content {
+          display: none;
+        }
       `}</style>
       <div id="overlay">Click to start</div>
+      <div id="menu" className="minimized">
+        <button id="toggle-menu">Menu</button>
+        <div id="menu-content">
+          <label>Zoom <input id="menu-fov" type="range" min="100" max="800" value="400" /></label><br />
+          <label>Speed <input id="menu-speed" type="range" min="50" max="200" value="100" /></label>
+        </div>
+      </div>
       {/* Scene setup */}
       <Script id="main-script" strategy="lazyOnload">
         {`
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           document.body.appendChild(canvas);
+
+          const menu = document.getElementById('menu');
+          const toggleBtn = document.getElementById('toggle-menu');
+          const fovInput = document.getElementById('menu-fov');
+          const speedInput = document.getElementById('menu-speed');
+
+          toggleBtn.addEventListener('click', () => {
+            menu.classList.toggle('minimized');
+          });
 
           function resize() {
             canvas.width = window.innerWidth;
@@ -82,6 +114,18 @@ export default function Home() {
 
           const camera = { x: 0, y: 0, z: 0, yaw: 0, pitch: 0 };
           let fov = 400;
+          let moveSpeed = 100;
+
+          fovInput.value = fov;
+          speedInput.value = moveSpeed;
+
+          fovInput.addEventListener('input', () => {
+            fov = Number(fovInput.value);
+          });
+
+          speedInput.addEventListener('input', () => {
+            moveSpeed = Number(speedInput.value);
+          });
 
           canvas.addEventListener('mousemove', (e) => {
             if (document.pointerLockElement !== canvas) return;
@@ -91,7 +135,7 @@ export default function Home() {
           });
 
           function update(delta) {
-            const speed = 100 * delta;
+            const speed = moveSpeed * delta;
             const cos = Math.cos(camera.yaw);
             const sin = Math.sin(camera.yaw);
             if (keys['w']) {
@@ -111,8 +155,14 @@ export default function Home() {
               camera.z -= sin * speed;
             }
 
-            if (keys['Shift']) fov = Math.max(100, fov - 200 * delta);
-            if (keys['Control']) fov = Math.min(800, fov + 200 * delta);
+            if (keys['Shift']) {
+              fov = Math.max(100, fov - 200 * delta);
+              fovInput.value = fov;
+            }
+            if (keys['Control']) {
+              fov = Math.min(800, fov + 200 * delta);
+              fovInput.value = fov;
+            }
 
             balls.forEach((b) => {
               b.x += b.vx * delta * 60;
