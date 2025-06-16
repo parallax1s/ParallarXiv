@@ -45,11 +45,7 @@
   });
 
   document.addEventListener('pointerlockchange', () => {
-    if (document.pointerLockElement === canvas) {
-      overlay.style.display = 'none';
-    } else {
-      overlay.style.display = 'flex';
-    }
+    overlay.style.display = document.pointerLockElement === canvas ? 'none' : 'flex';
   });
 
   const balls = [];
@@ -58,11 +54,13 @@
     const color = `hsl(${Math.random() * 360}, 70%, 50%)`;
     const ball = {
       x: (Math.random() - 0.5) * 400,
-      y: (Math.random() - 0.5) * 300,
+      y: (Math.random() - 0.5) * 200,
+      z: (Math.random() - 0.5) * 400,
       r: radius,
       color,
       vx: (Math.random() - 0.5) * 0.4,
       vy: (Math.random() - 0.5) * 0.4,
+      vz: (Math.random() - 0.5) * 0.4,
     };
     balls.push(ball);
     setTimeout(spawnBall, Math.random() * 2000 + 1000);
@@ -71,43 +69,89 @@
 
   const keys = {};
   window.addEventListener('keydown', (e) => {
-    keys[e.key.toLowerCase()] = true;
+    keys[e.key] = true;
   });
   window.addEventListener('keyup', (e) => {
-    keys[e.key.toLowerCase()] = false;
+    keys[e.key] = false;
   });
 
-  const player = { x: 0, y: 0 };
+  const camera = { x: 0, y: 0, z: 0, yaw: 0, pitch: 0 };
+  let fov = 400;
+
+  canvas.addEventListener('mousemove', (e) => {
+    if (document.pointerLockElement !== canvas) return;
+    camera.yaw -= e.movementX * 0.002;
+    camera.pitch -= e.movementY * 0.002;
+    camera.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.pitch));
+  });
 
   function update(delta) {
     const speed = 100 * delta;
-    if (keys['w']) player.y -= speed;
-    if (keys['s']) player.y += speed;
-    if (keys['a']) player.x -= speed;
-    if (keys['d']) player.x += speed;
+    const cos = Math.cos(camera.yaw);
+    const sin = Math.sin(camera.yaw);
+    if (keys['w']) {
+      camera.x += sin * speed;
+      camera.z += cos * speed;
+    }
+    if (keys['s']) {
+      camera.x -= sin * speed;
+      camera.z -= cos * speed;
+    }
+    if (keys['a']) {
+      camera.x -= cos * speed;
+      camera.z += sin * speed;
+    }
+    if (keys['d']) {
+      camera.x += cos * speed;
+      camera.z -= sin * speed;
+    }
+
+    if (keys['Shift']) fov = Math.max(100, fov - 200 * delta);
+    if (keys['Control']) fov = Math.min(800, fov + 200 * delta);
+
     balls.forEach((b) => {
       b.x += b.vx * delta * 60;
       b.y += b.vy * delta * 60;
-      if (Math.hypot(b.x, b.y) > 600) {
+      b.z += b.vz * delta * 60;
+      if (Math.hypot(b.x, b.y, b.z) > 600) {
         b.x *= 0.8;
         b.y *= 0.8;
+        b.z *= 0.8;
       }
     });
+  }
+
+  function project(x, y, z) {
+    x -= camera.x;
+    y -= camera.y;
+    z -= camera.z;
+
+    const cy = Math.cos(camera.yaw);
+    const sy = Math.sin(camera.yaw);
+    const cx = Math.cos(camera.pitch);
+    const sx = Math.sin(camera.pitch);
+
+    let dx = cy * x - sy * z;
+    let dz = sy * x + cy * z;
+    let dy = cx * y - sx * dz;
+    dz = sx * y + cx * dz;
+
+    const scale = fov / (fov + dz);
+    return { x: canvas.width / 2 + dx * scale, y: canvas.height / 2 + dy * scale, r: scale, visible: dz > -fov };
   }
 
   function draw() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.save();
-    ctx.translate(canvas.width / 2 - player.x, canvas.height / 2 - player.y);
     balls.forEach((b) => {
+      const p = project(b.x, b.y, b.z);
+      if (!p.visible) return;
       ctx.fillStyle = b.color;
       ctx.beginPath();
-      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, b.r * p.r, 0, Math.PI * 2);
       ctx.fill();
     });
-    ctx.restore();
 
     ctx.strokeStyle = '#fff';
     ctx.beginPath();
@@ -131,8 +175,8 @@
   canvas.addEventListener('click', () => {
     if (document.pointerLockElement !== canvas) return;
     for (let i = 0; i < balls.length; i++) {
-      const b = balls[i];
-      if (Math.hypot(b.x - player.x, b.y - player.y) <= b.r) {
+      const p = project(balls[i].x, balls[i].y, balls[i].z);
+      if (p.visible && Math.hypot(p.x - canvas.width / 2, p.y - canvas.height / 2) <= balls[i].r * p.r) {
         balls.splice(i, 1);
         break;
       }
