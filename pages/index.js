@@ -191,8 +191,9 @@ export default function Home() {
             let dy = cx * y - sx * dz;
             dz = sx * y + cx * dz;
 
-            const scale = fov / (fov + dz);
-            return { x: canvas.width / 2 + dx * scale, y: canvas.height / 2 + dy * scale, r: scale, visible: dz > -fov };
+            if (dz <= 0) return { visible: false };
+            const scale = fov / dz;
+            return { x: canvas.width / 2 + dx * scale, y: canvas.height / 2 + dy * scale, r: scale, visible: true };
           }
 
           function draw() {
