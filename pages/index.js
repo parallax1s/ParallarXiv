@@ -65,9 +65,14 @@ export default function Home() {
           const fovInput = document.getElementById('menu-fov');
           const speedInput = document.getElementById('menu-speed');
 
-          toggleBtn.addEventListener('click', () => {
+          let paused = false;
+
+          function toggleMenu() {
             menu.classList.toggle('minimized');
-          });
+            paused = !menu.classList.contains('minimized');
+          }
+
+          toggleBtn.addEventListener('click', toggleMenu);
 
           function resize() {
             canvas.width = window.innerWidth;
@@ -107,6 +112,9 @@ export default function Home() {
           const keys = {};
           window.addEventListener('keydown', (e) => {
             keys[e.key] = true;
+            if (e.key === 'm') {
+              toggleMenu();
+            }
           });
           window.addEventListener('keyup', (e) => {
             keys[e.key] = false;
@@ -161,12 +169,13 @@ export default function Home() {
 
             if (keys['Shift']) {
               fov = Math.max(100, fov - 200 * delta);
-              fovInput.value = fov;
             }
             if (keys['Control']) {
               fov = Math.min(800, fov + 200 * delta);
-              fovInput.value = fov;
             }
+
+            fovInput.value = fov;
+            speedInput.value = moveSpeed;
 
             balls.forEach((b) => {
               b.x += b.vx * delta * 60;
@@ -226,8 +235,10 @@ export default function Home() {
           function animate(time) {
             const delta = (time - last) / 1000;
             last = time;
-            update(delta);
-            draw();
+            if (!paused) {
+              update(delta);
+              draw();
+            }
             requestAnimationFrame(animate);
           }
           requestAnimationFrame(animate);
