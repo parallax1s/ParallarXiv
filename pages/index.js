@@ -139,7 +139,6 @@ export default function Home() {
             if (document.pointerLockElement !== canvas) return;
             camera.yaw -= e.movementX * 0.002;
             camera.pitch -= e.movementY * 0.002;
-            camera.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.pitch));
           });
 
           function update(delta) {
