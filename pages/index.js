@@ -112,9 +112,6 @@ export default function Home() {
           const keys = {};
           window.addEventListener('keydown', (e) => {
             keys[e.key] = true;
-            if (e.key === 'm') {
-              toggleMenu();
-            }
           });
           window.addEventListener('keyup', (e) => {
             keys[e.key] = false;
