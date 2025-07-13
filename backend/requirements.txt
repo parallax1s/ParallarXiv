@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+motor
+python-socketio
+python-dotenv
+ruff
+black
+pytest
+pytest-asyncio
+httpx
