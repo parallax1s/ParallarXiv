@@ -3,8 +3,8 @@ uvicorn[standard]
 motor
 python-socketio
 python-dotenv
-ruff
-black
+ruff==0.4.4
+black==24.4.2
 pytest
 pytest-asyncio
 httpx
