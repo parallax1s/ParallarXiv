@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>arXiv DOI Lookup</title>
+  </head>
+  <body>
+    <h1>arXiv DOI Lookup</h1>
+    <form id="doi-form">
+      <input
+        type="text"
+        id="doi-input"
+        placeholder="Enter DOI, e.g. 10.48550/arXiv.2101.00001"
+        required
+      />
+      <button type="submit">Fetch</button>
+    </form>
+    <pre id="results"></pre>
+    <script type="module" src="script.js"></script>
+  </body>
+</html>
