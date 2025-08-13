@@ -1,6 +1,12 @@
 async function fetchArxivByDoi(doi) {
-  const query = encodeURIComponent(`doi:${doi}`);
-  const url = `https://export.arxiv.org/api/query?search_query=${query}`;
+  const match = doi.match(/^10\.48550\/arXiv\.(.+)$/i);
+  if (!match) {
+    return { error: "Not a valid arXiv DOI" };
+  }
+  const arxivId = match[1];
+  const url = `https://export.arxiv.org/api/query?id_list=${encodeURIComponent(
+    arxivId,
+  )}`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Request failed: ${response.status}`);

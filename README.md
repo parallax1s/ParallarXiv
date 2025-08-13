@@ -26,9 +26,11 @@ Automated via GitHub Actions workflow in `.github/workflows/ci.yml`.
 
 ## GitHub Pages DOI Lookup
 
-The `docs/` directory hosts a minimal static site that lets you enter a DOI and
-fetch metadata from the arXiv API. Enable GitHub Pages for this repository and
-select the `docs` folder as the source to make the page available online.
+The `docs/` directory hosts a minimal static site that lets you enter an
+arXiv DOI (e.g. `10.48550/arXiv.2101.00001`) and fetch metadata from the
+official arXiv API via its `id_list` parameter. Enable GitHub Pages for this
+repository and select the `docs` folder as the source to make the page
+available online.
 
 ## Licence
 
