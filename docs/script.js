@@ -1,9 +1,24 @@
+function extractArxivId(input) {
+  const trimmed = input.trim();
+  // Accept full DOI URLs like https://doi.org/10.48550/arXiv.1234.56789
+  let match = trimmed.match(
+    /^(?:https?:\/\/doi\.org\/)?10\.48550\/arXiv\.(.+)$/i,
+  );
+  if (match) return match[1];
+  // Accept arXiv identifiers such as arXiv:1234.56789v2
+  match = trimmed.match(/^arXiv:(.+)$/i);
+  if (match) return match[1];
+  // Finally, accept a bare arXiv id like 1234.56789v2
+  match = trimmed.match(/^[\w.-]+$/);
+  if (match) return match[0];
+  return null;
+}
+
 async function fetchArxivByDoi(doi) {
-  const match = doi.match(/^10\.48550\/arXiv\.(.+)$/i);
-  if (!match) {
+  const arxivId = extractArxivId(doi);
+  if (!arxivId) {
     return { error: "Not a valid arXiv DOI" };
   }
-  const arxivId = match[1];
   const url = `https://export.arxiv.org/api/query?id_list=${encodeURIComponent(
     arxivId,
   )}`;
