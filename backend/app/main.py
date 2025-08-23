@@ -39,6 +39,7 @@ async def get_paper_info(paper_id: str):
     """Return information about a paper, caching results in a database."""
     cached = get_paper(paper_id)
     if cached:
+        print(f"Paper {paper_id} served from database cache instead of arXiv")
         return cached
     data = await fetch_paper_info(paper_id)
     save_paper(paper_id, data)
